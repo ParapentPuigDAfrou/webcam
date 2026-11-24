@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Meteo i Webcam · Santa Brígida - Amer</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0f172a">
+  <script src="https://jsdelivr.net"></script>
+  <style>
+    :root { --bg: #0f172a; --card: #1e293b; --text: #f8fafc; --muted: #94a3b8; --accent: #38bdf8; --green: #22c55e; --red: #ef4444; --orange: #f59e0b; }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background: var(--bg); color: var(--text); padding: 12px; max-width: 900px; margin: 0 auto; }
+    header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding: 4px 2px; }
+    h1 { font-size: 1.15rem; font-weight: 700; }
+    .sub { font-size: 0.78rem; color: var(--muted); }
+    .badge { background: rgba(34, 197, 94, 0.15); color: var(--green); border: 1px solid rgba(34, 197, 94, 0.4); padding: 4px 10px; border-radius: 99px; font-size: 0.75rem; font-weight: 600; }
+    .card { background: var(--card); border-radius: 14px; padding: 14px; margin-bottom: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.25); }
+    .cam-wrap { position: relative; border-radius: 10px; overflow: hidden; background: #000; aspect-ratio: 16/9; }
+    .cam-wrap img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .cam-overlay { position: absolute; bottom: 8px; left: 8px; right: 8px; display: flex; justify-content: space-between; align-items: center; background: rgba(15, 23, 42, 0.75); backdrop-filter: blur(4px); padding: 6px 10px; border-radius: 8px; font-size: 0.78rem; }
+    .btn-fs { background: var(--accent); color: #0f172a; border: none; padding: 4px 10px; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 0.75rem; }
+    .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 12px; }
+    @media (min-width: 600px) { .grid { grid-template-columns: repeat(4, 1fr); } }
+    .stat { background: var(--card); border-radius: 12px; padding: 12px; text-align: center; }
+    .stat-label { font-size: 0.75rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+    .stat-val { font-size: 1.65rem; font-weight: 800; margin: 4px 0; color: var(--text); }
+    .stat-sub { font-size: 0.8rem; color: var(--accent); font-weight: 600; }
+    .compass { display: inline-block; width: 22px; height: 22px; line-height: 22px; text-align: center; background: rgba(56, 189, 248, 0.2); border-radius: 50%; margin-right: 4px; transition: transform 0.5s ease; }
+    .alert-adf { display: none; background: rgba(239, 68, 68, 0.18); border: 1px solid var(--red); color: #fca5a5; padding: 10px 12px; border-radius: 10px; font-size: 0.82rem; margin-bottom: 12px; font-weight: 600; }
+    .chart-title { font-size: 0.9rem; font-weight: 700; margin-bottom: 8px; color: var(--text); display: flex; justify-content: space-between; }
+    .chart-box { position: relative; height: 210px; width: 100%; }
+    footer { text-align: center; font-size: 0.75rem; color: var(--muted); margin-top: 10px; padding-bottom: 16px; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>Santa Brígida · Puig d'Afrou</h1>
+    <div class="sub">Club Parapent & Vigilància ADF · Amer</div>
+  </div>
+  <div class="badge" id="status-time">Actualitzant...</div>
+</header>
+
+<div class="alert-adf" id="adf-alert">
+  ⚠️ ALERTA RISC INCENDI (Regla 30-30-30): Humitat baixa, temperatura elevada o vent fort detectat.
+</div>
+
+<div class="card" style="padding: 8px;">
+  <div class="cam-wrap" id="cam-container">
+    <img id="webcam-img" src="https://githubusercontent.com" alt="Webcam Santa Brígida">
+    <div class="cam-overlay">
+      <span id="cam-caption">Enlairament Santa Brígida (Amer)</span>
+      <button class="btn-fs" onclick="toggleFullScreen()">Pantalla completa</button>
+    </div>
+  </div>
+</div>
+
+<div class="grid">
+  <div class="stat">
+    <div class="stat-label">Vent Mitjà</div>
+    <div class="stat-val" id="val-vent">--</div>
+    <div class="stat-sub" id="val-rafega">Ràfega: -- km/h</div>
+  </div>
+  <div class="stat">
+    <div class="stat-label">Direcció</div>
+    <div class="stat-val"><span class="compass" id="compass-arrow">↓</span><span id="val-dir-txt">--</span></div>
+    <div class="stat-sub" id="val-dir-deg">--°</div>
+  </div>
+  <div class="stat">
+    <div class="stat-label">Temperatura</div>
+    <div class="stat-val" id="val-temp">--</div>
+    <div class="stat-sub" id="val-press">Pressió: -- hPa</div>
+  </div>
+  <div class="stat">
+    <div class="stat-label">Humitat Relativa</div>
+    <div class="stat-val" id="val-hum">--</div>
+    <div class="stat-sub" id="val-adf-status">Risc incendi: Normal</div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="chart-title">
+    <span>Progressió Velocitat i Ràfegues (Avui)</span>
+    <span style="color:var(--muted); font-weight:400;">km/h</span>
+  </div>
+  <div class="chart-box"><canvas id="speedChart"></canvas></div>
+</div>
+
+<div class="card">
+  <div class="chart-title">
+    <span>Progressió Direcció del Vent (Avui)</span>
+    <span style="color:var(--muted); font-weight:400;">0° N · 90° E · 180° S · 270° O</span>
+  </div>
+  <div class="chart-box"><canvas id="dirChart"></canvas></div>
+</div>
+
+<footer>
+  Dades en directe de l'estació meteorològica de Santa Brígida · Actualització automàtica
+</footer>
+
+<script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+}
+
+let speedChart = null;
+let dirChart = null;
+
+function degToCardinal(deg) {
+  if (deg === null || deg === undefined) return "--";
+  const dirs = ["N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSO","SO","OSO","O","ONO","NO","NNO"];
+  return dirs[Math.round(deg / 22.5) % 16];
+}
+
+function toggleFullScreen() {
+  const el = document.getElementById("cam-container");
+  if (!document.fullscreenElement) {
+    el.requestFullscreen().catch(() => {});
+  } else {
+    document.exitFullscreen();
+  }
+}
+
+async function carregarDades() {
+  try {
+        // Refrescar imatge des de GitHub evitant memòria cau
+    const img = document.getElementById("webcam-img");
+    img.src = "https://githubusercontent.com" + Date.now();
+
+    // Carregar dades actuals
+    const res = await fetch("dades.json?t=" + Date.now());
+    const d = await res.json();
+
+    document.getElementById("status-time").textContent = "En directe · " + d.hora;
+    document.getElementById("val-vent").textContent = d.vent + " km/h";
+    document.getElementById("val-rafega").textContent = "Ràfega: " + d.rafega + " km/h";
+    document.getElementById("val-dir-txt").textContent = degToCardinal(d.dir);
+    document.getElementById("val-dir-deg").textContent = d.dir + "°";
+    document.getElementById("compass-arrow").style.transform = `rotate(${d.dir}deg)`;
+    document.getElementById("val-temp").textContent = d.temp + " °C";
+    document.getElementById("val-press").textContent = "Pressió: " + d.press + " hPa";
+    document.getElementById("val-hum").textContent = d.hum + " %";
+
+    // Avaluació regla 30-30-30 per a ADF
+    const alertBox = document.getElementById("adf-alert");
+    const adfSub = document.getElementById("val-adf-status");
+    if (d.hum <= 30 || (d.temp >= 30 && d.vent >= 30)) {
+      alertBox.style.display = "block";
+      adfSub.textContent = "⚠️ Humitat crítica (<30%)";
+      adfSub.style.color = "#ef4444";
+    } else {
+      alertBox.style.display = "none";
+      adfSub.textContent = "Condicions estables";
+      adfSub.style.color = "#22c55e";
+    }
+
+    // Carregar històric per a les gràfiques
+    const hRes = await fetch("historic.json?t=" + Date.now());
+    const hist = await hRes.json();
+    actualitzarGrafiques(hist);
+  } catch (e) {
+    console.error("Esperant primeres dades...", e);
+  }
+}
+
+function actualitzarGrafiques(hist) {
+  const labels = hist.map(x => x.hora);
+  const vents = hist.map(x => x.vent);
+  const rafegues = hist.map(x => x.rafega);
+  const direccions = hist.map(x => x.dir);
+
+  if (speedChart) speedChart.destroy();
+  speedChart = new Chart(document.getElementById("speedChart"), {
+    type: "line",
+    data: {
+      labels: labels,
+      datasets: [
+        { label: "Vent (km/h)", data: vents, borderColor: "#38bdf8", backgroundColor: "rgba(56,189,248,0.15)", fill: true, tension: 0.3, pointRadius: 2 },
+        { label: "Ràfega (km/h)", data: rafegues, borderColor: "#f59e0b", borderDash:, tension: 0.3, pointRadius: 2 }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { labels: { color: "#cbd5e1", boxWidth: 12 } } },
+      scales: {
+        x: { ticks: { color: "#94a3b8", maxTicksLimit: 8 }, grid: { color: "rgba(255,255,255,0.05)" } },
+        y: { beginAtZero: true, ticks: { color: "#94a3b8" }, grid: { color: "rgba(255,255,255,0.08)" } }
+      }
+    }
+  });
+
+  if (dirChart) dirChart.destroy();
+  dirChart = new Chart(document.getElementById("dirChart"), {
+    type: "line",
+    data: {
+      labels: labels,
+      datasets: [
+        { label: "Direcció (°)", data: direccions, borderColor: "#22c55e", backgroundColor: "#22c55e", showLine: false, pointRadius: 4 }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { color: "#94a3b8", maxTicksLimit: 8 }, grid: { color: "rgba(255,255,255,0.05)" } },
+        y: {
+          min: 0, max: 360,
+          ticks: {
+            stepSize: 90, color: "#94a3b8",
+            callback: v => ({0:"N (0°)", 90:"E (90°)", 180:"S (180°)", 270:"O (270°)", 360:"N (360°)"}[v] ?? v)
+          },
+          grid: { color: "rgba(255,255,255,0.08)" }
+        }
+      }
+    }
+  });
+}
+
+carregarDades();
