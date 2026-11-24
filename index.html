@@ -102,7 +102,7 @@
 
 <script>
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('sw.js').catch(() => {});
+  navigator.serviceWorker.register('sw.js').catch(function() {});
 }
 
 let speedChart = null;
@@ -110,14 +110,14 @@ let dirChart = null;
 
 function degToCardinal(deg) {
   if (deg === null || deg === undefined || deg === "") return "--";
-  const dirs = ["N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSO","SO","OSO","O","ONO","NO","NNO"];
-  return dirs[Math.round(deg / 22.5) % 16];
+  const dirs = new Array("N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSO","SO","OSO","O","ONO","NO","NNO");
+  return dirs.at(Math.round(deg / 22.5) % 16);
 }
 
 function toggleFullScreen() {
   const el = document.getElementById("cam-container");
   if (!document.fullscreenElement) {
-    el.requestFullscreen().catch(() => {});
+    el.requestFullscreen().catch(function() {});
   } else {
     document.exitFullscreen();
   }
@@ -129,7 +129,7 @@ async function carregarDades() {
     img.src = "webcam.jpg?t=" + Date.now();
 
     const res = await fetch("dades.json?t=" + Date.now());
-    if (!res.ok) throw new Error("No es troba dades.json");
+    if (!res.ok) throw new Error("Sense dades.json");
     const d = await res.json();
 
     document.getElementById("status-time").textContent = "En directe · " + (d.hora || "--:--");
@@ -169,20 +169,20 @@ async function carregarDades() {
 }
 
 function actualitzarGrafiques(hist) {
-  const labels = hist.map(x => x.hora);
-  const vents = hist.map(x => x.vent);
-  const rafegues = hist.map(x => x.rafega);
-  const direccions = hist.map(x => x.dir);
+  const labels = hist.map(function(x) { return x.hora; });
+  const vents = hist.map(function(x) { return x.vent; });
+  const rafegues = hist.map(function(x) { return x.rafega; });
+  const direccions = hist.map(function(x) { return x.dir; });
 
   if (speedChart) speedChart.destroy();
   speedChart = new Chart(document.getElementById("speedChart"), {
     type: "line",
     data: {
       labels: labels,
-      datasets: [
-        { label: "Vent (km/h)", data: vents, borderColor: "#38bdf8", backgroundColor: "rgba(56,189,248,0.15)", fill: true, tension: 0.3, pointRadius: 2 },
-        { label: "Ràfega (km/h)", data: rafegues, borderColor: "#f59e0b", borderDash: Array(5, 5), tension: 0.3, pointRadius: 2 }
-      ]
+      datasets: new Array(
+        { label: "Vent (km/h)", data: vents, borderColor: "#38bdf8", backgroundColor: "rgba(56,189,248,0.15)", fill: true, tension: 0.3, pointRadius: 3 },
+        { label: "Ràfega (km/h)", data: rafegues, borderColor: "#f59e0b", borderDash: new Array(5, 5), tension: 0.3, pointRadius: 3 }
+      )
     },
     options: {
       responsive: true, maintainAspectRatio: false,
@@ -199,9 +199,9 @@ function actualitzarGrafiques(hist) {
     type: "line",
     data: {
       labels: labels,
-      datasets: [
-        { label: "Direcció (°)", data: direccions, borderColor: "#22c55e", backgroundColor: "#22c55e", showLine: false, pointRadius: 4 }
-      ]
+      datasets: new Array(
+        { label: "Direcció (°)", data: direccions, borderColor: "#22c55e", backgroundColor: "#22c55e", showLine: false, pointRadius: 5 }
+      )
     },
     options: {
       responsive: true, maintainAspectRatio: false,
@@ -227,6 +227,7 @@ function actualitzarGrafiques(hist) {
     }
   });
 }
+
 carregarDades();
 setInterval(carregarDades, 60000);
 </script>
