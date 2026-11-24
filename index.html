@@ -49,7 +49,7 @@
 
 <div class="card" style="padding: 8px;">
   <div class="cam-wrap" id="cam-container">
-    <img id="webcam-img" src="https://githubusercontent.com" alt="Webcam Santa Brígida">
+    <img id="webcam-img" src="webcam.jpg" alt="Webcam Santa Brígida">
     <div class="cam-overlay">
       <span id="cam-caption">Enlairament Santa Brígida (Amer)</span>
       <button class="btn-fs" onclick="toggleFullScreen()">Pantalla completa</button>
@@ -127,7 +127,7 @@ async function carregarDades() {
   try {
         // Refrescar imatge des de GitHub evitant memòria cau
     const img = document.getElementById("webcam-img");
-    img.src = "https://githubusercontent.com" + Date.now();
+    img.src = "webcam.jpg?t=" + Date.now();
 
     // Carregar dades actuals
     const res = await fetch("dades.json?t=" + Date.now());
@@ -178,7 +178,8 @@ function actualitzarGrafiques(hist) {
       labels: labels,
       datasets: [
         { label: "Vent (km/h)", data: vents, borderColor: "#38bdf8", backgroundColor: "rgba(56,189,248,0.15)", fill: true, tension: 0.3, pointRadius: 2 },
-        { label: "Ràfega (km/h)", data: rafegues, borderColor: "#f59e0b", borderDash:, tension: 0.3, pointRadius: 2 }
+        { label: "Ràfega (km/h)", data: rafegues, borderColor: "#f59e0b", borderDash: Array(5, 5), tension: 0.3, pointRadius: 2 }
+
       ]
     },
     options: {
