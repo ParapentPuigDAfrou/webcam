@@ -2,7 +2,7 @@
   "name": "Meteo i Webcam Santa Brígida - Amer",
   "short_name": "Meteo St.Brígida",
   "description": "Càmera en directe i estació meteorològica de Puig d'Afrou - Santa Brígida (Amer)",
-  "start_url": "/webcam/index.html",
+  "start_url": "/index.html",
   "display": "standalone",
   "background_color": "#0f172a",
   "theme_color": "#0f172a",
